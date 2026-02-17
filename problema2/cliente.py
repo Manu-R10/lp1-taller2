@@ -4,29 +4,32 @@ Problema 2: Comunicación bidireccional - Cliente
 Objetivo: Crear un cliente TCP que envíe un mensaje al servidor y reciba la misma respuesta
 """
 
+#!/usr/bin/env python3
 import socket
 
-# TODO: Definir la dirección y puerto del servidor
+#
+HOST = '127.0.0.1' 
+PORT = 65432
 
-# Solicitar mensaje al usuario por consola
+# 
 message = input("Mensaje: ")
 
-# TODO: Crear un socket TCP/IP
-# AF_INET: socket de familia IPv4
-# SOCK_STREAM: socket de tipo TCP (orientado a conexión)
+# 
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
+    # 
+    client_socket.connect((HOST, PORT))
+    
+    # TODO 
+    
+    # 
+    client_socket.sendall(message.encode()) 
+    print(f"Mensaje '{message}' enviado.")
+    
+    # 
+    data = client_socket.recv(1000)
+    
+    # 
+    print("Mensaje recibido del servidor: ", data.decode())
 
-# TODO: Conectar el socket al servidor en la dirección y puerto especificados
-
-# Mostrar mensaje que se va a enviar
-print(f"Mensaje '{message}' enviado.")
-
-# TODO: Codificar el mensaje a bytes y enviarlo al servidor
-# sendall() asegura que todos los datos sean enviados
-
-# TODO: Recibir datos del servidor (hasta 1024 bytes)
-
-# Decodificar e imprimir los datos recibidos
-print("Mensaje recibido: ", data.decode())
-
-# TODO: Cerrar la conexión con el servidor
-
+# 
+print("Conexión cerrada.")

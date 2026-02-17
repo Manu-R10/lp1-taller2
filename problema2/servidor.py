@@ -6,39 +6,37 @@ Objetivo: Crear un servidor TCP que devuelva exactamente lo que recibe del clien
 
 import socket
 
-# TODO: Definir la dirección y puerto del servidor
 
-# TODO: Crear un socket TCP/IP
-# AF_INET: socket de familia IPv4
-# SOCK_STREAM: socket de tipo TCP (orientado a conexión)
+HOST = '127.0.0.1' 
+PORT = 65432
 
-# TODO: Enlazar el socket a la dirección y puerto especificados
 
-# TODO: Poner el socket en modo escucha
-# El parámetro define el número máximo de conexiones en cola
-
-# Bucle infinito para manejar múltiples conexiones (una a la vez)
-while True:
-
-    print("Servidor a la espera de conexiones ...")
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
+   
+    server_socket.bind((HOST, PORT))
     
-    # TODO: Aceptar una conexión entrante
-    # accept() bloquea hasta que llega una conexión
-    # conn: nuevo socket para comunicarse con el cliente
-    # addr: dirección y puerto del cliente
     
-    print(f"Conexión realizada por {addr}")
+    server_socket.listen(1)
+    print(f"Servidor de manu en espera {HOST}:{PORT}...")
 
-    # TODO: Recibir datos del cliente (hasta 1024 bytes)
-    
-    # Si no se reciben datos, salir del bucle
-    if not data:
-        break
-
-    # Mostrar los datos recibidos (en formato bytes)
-    print("Datos recibidos:", data)
-    
-    # TODO: Enviar los mismos datos de vuelta al cliente (echo)
-    
-    # TODO: Cerrar la conexión con el cliente actual
-
+    while True:
+      
+        conn, addr = server_socket.accept()
+        
+        with conn:
+            print(f"Conexión desde: {addr}")
+            
+            while True:
+               
+                data = conn.recv(1024)
+                
+               
+                if not data:
+                    print(f"Cliente {addr} desconectado.")
+                    break
+                
+                print(f"Recibido: {data.decode()}")
+                
+                
+                conn.sendall(data)
+                print("Respuesta enviada.")
