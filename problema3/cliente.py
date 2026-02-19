@@ -1,42 +1,66 @@
 #!/usr/bin/env python3
-"""
-Problema 3: Chat simple con múltiples clientes - Cliente
-Objetivo: Crear un cliente de chat que se conecte a un servidor y permita enviar/recibir mensajes en tiempo real
-"""
-
 import socket
 import threading
+import sys
 
-def receive_messages():
+# 
+SERVER_HOST = '127.0.0.1' 
+SERVER_PORT = 12345       
+
+def receive_messages(sock):
     """
-    Función ejecutada en un hilo separado para recibir mensajes del servidor
-    de forma continua sin bloquear el hilo principal.
+    Función para recibir mensajes sin bloquear el envío.
     """
     while True:
-        # TODO: Recibir mensajes del servidor (hasta 1024 bytes) y decodificarlos
+        try:
+            # 
+            message = sock.recv(1001).decode('utf-8')
+            if message:
+                # 
+                print(f"\r{message}\nMensaje: ", end="", flush=True)
+            else:
+                print("\n Conexión cerrada.")
+                break
+        except:
+            print("\n Error de conexión.")
+            break
+    sock.close()
+    sys.exit()
 
-        # Imprimir el mensaje recibido
-        print(message)
+#
+client_name = input("Me puedes decir cual es tu nombre?  ")
 
-# Solicitar nombre de usuario al cliente
-client_name = input("Cuál es tu nombre? ")
+# 
+client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-# TODO: Crear un socket TCP/IP
-# AF_INET: socket de familia IPv4
-# SOCK_STREAM: socket de tipo TCP (orientado a conexión)
+try:
+    # 
+    client_socket.connect((SERVER_HOST, SERVER_PORT))
+    
+    # 
+    client_socket.send(client_name.encode('utf-8'))
 
-# TODO: Conectar el socket al servidor en la dirección y puerto especificados
+    # 
+    # 
+    receive_thread = threading.Thread(target=receive_messages, args=(client_socket,), daemon=True)
+    receive_thread.start()
 
-# TODO: Enviar el nombre del cliente al servidor (codificado a bytes)
+    print(f" Hola {client_name}. Escribe 'chao' para terminar ")
+    # 
+    while True:
 
-# Crear y iniciar un hilo para recibir mensajes del servidor
-# target: función que se ejecutará en el hilo
-receive_thread = threading.Thread(target=receive_messages)
-receive_thread.start()
+        msg_to_send = input("Mensaje: ")
+        
+        if msg_to_send.lower() == 'chao':
+            break
+        
+        if msg_to_send:
+            client_socket.send(msg_to_send.encode('utf-8'))
 
-# Bucle principal en el hilo principal para enviar mensajes al servidor
-while True:
-    # Solicitar mensaje al usuario por consola
-    message = input("Mensaje: ")
-    # TODO: Codificar el mensaje a bytes y enviarlo al servidor
-
+except ConnectionRefusedError:
+    print("No se pudo conectar.")
+except Exception as e:
+    print(f"Hay un error: {e}")
+finally:
+    client_socket.close()
+    print("Chat finalizado.")

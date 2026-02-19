@@ -1,93 +1,107 @@
 #!/usr/bin/env python3
 """
 Problema 3: Chat simple con múltiples clientes - Servidor
-Objetivo: Crear un servidor de chat que maneje múltiples clientes simultáneamente usando threads
 """
 
 import socket
 import threading
 
-# TODO: Definir la dirección y puerto del servidor
+# TODO: 
+SERVER_HOST = '127.0.0.1' 
+SERVER_PORT = 12345        
 
-# Lista para mantener todos los sockets de clientes conectados
+# 
 clients = []
-
-def handle_client(client_socket, client_name):
-    """
-    Maneja la comunicación con un cliente específico en un hilo separado.
-    
-    Args:
-        client_socket: Socket del cliente
-        client_name: Nombre del cliente
-    """
-    while True:
-        try:
-            # TODO: Recibir datos del cliente (hasta 1024 bytes)
-            
-            # Si no se reciben datos, el cliente se desconectó
-            if not data:
-                break
-                
-            # Formatear el mensaje con el nombre del cliente
-            message = f"{client_name}: {data.decode()}"
-            
-            # Imprimir el mensaje en el servidor
-            print(message)
-            
-            # TODO: Retransmitir el mensaje a todos los clientes excepto al remitente
-
-            
-        except ConnectionResetError:
-            # Manejar desconexión inesperada del cliente
-            clients.remove(client_socket)
-            client_socket.close()
-            break
 
 def broadcast(message, sender_socket):
     """
     Envía un mensaje a todos los clientes conectados excepto al remitente.
-    
-    Args:
-        message: Mensaje a enviar (string)
-        sender_socket: Socket del cliente que envió el mensaje original
     """
     for client in clients:
         if client != sender_socket:
-            # TODO: Enviar el mensaje codificado a bytes a cada cliente
+            try:
+                # TODO:
+                client.send(message.encode('utf-8'))
+            except:
+                # 
+                if client in clients:
+                    clients.remove(client)
 
+def handle_client(client_socket, client_name):
+    """
+    Maneja la comunicación con un cliente específico en un hilo separado.
+    """
+    while True:
+        try:
+            # TODO: )
+            data = client_socket.recv(1001)
+            
+            # 
+            if not data:
+                break
+                
+            # 
+            message = f"{client_name}: {data.decode('utf-8')}"
+            
+            # 
+            print(message)
+            
+            # TODO: 
+            broadcast(message, client_socket)
+            
+        except (ConnectionResetError, ConnectionAbortedError):
+            break
+        except Exception as e:
+            print(f"Error con {client_name}: {e}")
+            break
 
-# TODO: Crear un socket TCP/IP
-# AF_INET: socket de familia IPv4
-# SOCK_STREAM: socket de tipo TCP (orientado a conexión)
+    # 
+    if client_socket in clients:
+        clients.remove(client_socket)
+    client_socket.close()
+    broadcast(f" {client_name} ha salido del chat", None)
+    print(f" Conexión cerrada con {client_name}")
 
-# TODO: Enlazar el socket a la dirección y puerto especificados
+# TODO: 
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-# TODO: Poner el socket en modo escucha
-# El parámetro define el número máximo de conexiones en cola
+# 
+server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-print("Servidor a la espera de conexiones ...")
+# TODO: 
+server_socket.bind((SERVER_HOST, SERVER_PORT))
 
-# Bucle principal para aceptar conexiones entrantes
+# TODO: 
+server_socket.listen(5)
+
+print(f" Servidor iniciado en {SERVER_HOST}:{SERVER_PORT}")
+print("Esperando conexiones")
+
+# 
 while True:
-    # TODO: Aceptar una conexión entrante
-    # client: nuevo socket para comunicarse con el cliente
-    # addr: dirección y puerto del cliente
+    # TODO: 
+    client, addr = server_socket.accept()
     
-    print(f"Conexión realizada por {addr}")
-    
-    # TODO: Recibir el nombre del cliente (hasta 1024 bytes) y decodificarlo
-    
-    # TODO: Agregar el socket del cliente a la lista de clientes conectados
-    
-    # Enviar mensaje de confirmación de conexión al cliente
-    client.send("ya estás conectado!".encode())
-    
-    # Notificar a todos los clientes que un nuevo usuario se unió al chat
-    broadcast(f"{client_name} se ha unido al Chat.", client)
-    
-    # TODO: Crear e iniciar un hilo para manejar la comunicación con este cliente
-    # target: función que se ejecutará en el hilo
-    # args: argumentos que se pasarán a la función
-    client_handler = # ...
-    client_handler.start()
-
+    try:
+        # TODO:
+        client_name = client.recv(1024).decode('utf-8')
+        
+        # TODO: 
+        clients.append(client)
+        
+        print(f" Conexión realizada por {client_name} desde {addr}")
+        
+        # 
+        client.send("Ya esta conectada ".encode('utf-8'))
+        
+        # 
+        broadcast(f"--- {client_name} se ha unido. ---", client)
+        
+        # TODO: 
+        client_handler = threading.Thread(target=handle_client, args=(client, client_name))
+        client_handler.daemon = True
+        client_handler.start()
+        
+    except Exception as e:
+        print(f"Error de conexión: {e}")
+        client.close()
